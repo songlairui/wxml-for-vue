@@ -1,16 +1,19 @@
 <template>
     <div class="paas-swiper">
         <div class="paas-swiper__wrapper">
-          <slot></slot>
+            <slot></slot>
         </div>
         <div class="paas-swiper-indicator">
-          <i class="indicator-item" :key="idx" :class="{active: idx === activeIdx }" v-for="(item, idx) in indicatorArr"></i>
+            <indicator-dot :activateIdx='activateIdx' :indicatorsArr='indicatorsArr' v-for="(item, idx) in indicatorArr" :key="idx"></indicator-dot>
         </div>  
     </div>
 </template>
 <script>
+import IndicatorDot from './indicator-dots'
+
 export default {
   name: 'PaasSwiper',
+  components: { IndicatorDot },
   props: {
     indicatorDots: {
       type: Boolean,
@@ -53,12 +56,12 @@ export default {
       default: false
     },
     previousMargin: {
-      type: String,
-      default: '#000000'
+      type: Number,
+      default: 0
     },
     nextMargin: {
-      type: String,
-      default: '#000000'
+      type: Number,
+      default: 0
     },
     displayMultipleItems: {
       type: Number,
@@ -70,14 +73,16 @@ export default {
     }
   },
   data() {
-    return {}
+    return {
+      indicatorArr: []
+    }
   }
 }
 </script>
 
 <style lang="less">
 .red {
-  color: red
+  color: red;
 }
 .paas-swiper {
   position: relative;
