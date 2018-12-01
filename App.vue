@@ -10,7 +10,8 @@
         <div class="stage">
             <swiper
                     :indicatorDots="indicatorDots" :autoplay="autoplay" :circular="circular" :vertical="vertical"
-                    :interval="interval" :duration="duration" :previousMargin="previousMargin" :nextMargin="nextMargin">
+                    :interval="interval" :duration="duration" :previousMargin="previousMargin" :nextMargin="nextMargin"
+                    @change="debug">
                 <swiper-item v-for="(item, idx) in background" :key="idx">
                     <div class="swiper-item" :class="item"></div>
                 </swiper-item>
@@ -66,6 +67,9 @@
             },
             durationChange() {
 
+            },
+            debug(x) {
+                console.warn(x.detail)
             }
         },
         mounted() {
@@ -146,7 +150,8 @@
         left: 50%;
         transform: translate(-50%, -50%);
     }
-    .swiper-item{
+
+    .swiper-item {
         height: 150px;
     }
 </style>

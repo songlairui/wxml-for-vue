@@ -42,13 +42,13 @@
                 curr: 0,
                 offset: 0,
                 goto: -1,
-                eventHandlers: {},
                 width: 0,
                 height: 0,
                 transition: 'none',
                 count: 0,
                 translateXY: [0, 0],
-                touching: false
+                touching: false,
+                source: ''
                 /* 未响应变量
                 timerAni
                 timerAuto
@@ -99,6 +99,11 @@
             },
             autoplay(val) {
                 val ? this.startAuto() : this.stopAuto()
+            },
+            curr(val) {
+                if (val > -1 && val < this.count) {
+                    this.$emit('change', {detail: {current: val, source: this.source}})
+                }
             }
         },
         methods: {
@@ -132,6 +137,7 @@
                 e.preventDefault();
             },
             async touchEnd(e) {
+                this.source = 'touch'
                 this.touching = false
                 const {pageX: x, pageY: y} = e.changedTouches[0] || {}
                 Object.assign(this.end, {x, y})
@@ -184,8 +190,7 @@
                 clearTimeout(this.timerAni)
                 this.timerAni = setTimeout(() => {
                     if (this.curr !== this.prev || this.timerAni !== null || this.goto > -1) {
-                        const cb = this.eventHandlers.swiped || this.noop
-                        cb.apply(this, [this.prev, this.curr])
+                        this.$emit('animationfinish', {detail: {current: this.curr, source: this.source}})
                         this.autoplay && this.startAuto()
                         this.goto = -1
                         this.timerAni = null
@@ -210,18 +215,8 @@
                 this.curr++
                 this.show(this.curr)
             },
-            on(eventName, cb) {
-                if (this.eventHandlers[eventName]) {
-                    throw new Error(`event ${eventName} is already register`)
-                }
-                if (typeof cb !== 'function') {
-                    throw new Error(`parameter callback must be a function`)
-                }
-                this.eventHandlers[eventName] = Object.freeze(cb)
-            },
-            noop() {
-            },
             startAuto() {
+                this.source = 'autoplay'
                 clearTimeout(this.timerAuto)
                 this.timerAuto = setTimeout(() => {
                     this.timerAuto = null
