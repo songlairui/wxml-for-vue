@@ -4,18 +4,27 @@
                  @touchmove="touchMove" @touchend="touchEnd">
             <slot></slot>
         </wrapper>
+        <indicator :count="count"
+                   :curr="curr"
+                   :indicatorColor="indicatorColor"
+                   :indicatorActiveColor="indicatorActiveColor"
+                   :vertical="vertical"
+                   v-if="indicatorDots && count">
+        </indicator>
     </div>
 </template>
 
 <script>
     import Wrapper from './wrapper'
+    import Indicator from './indicator'
     import props from './props'
 
     export default {
         props,
         name: 'swiper',
         components: {
-            Wrapper
+            Wrapper,
+            Indicator
         },
         data() {
             return {
@@ -31,7 +40,8 @@
                 width: 0,
                 height: 0,
                 transition: 'none',
-                transform: ''
+                count: 0,
+                translateXY: [0, 0]
             }
         },
         computed: {
@@ -43,23 +53,19 @@
             direction() {
                 return this.vertical ? 'vertical' : 'horizontal'
             },
-            items() {
-                return this.$children
-            },
-            count() {
-                return this.items.length
-            },
             outerStyle() {
-                let {width: w, height: h, transition, transform} = this
+                let {width: w, height: h, transition, translateXY} = this
                 if (!w || !h) return {}
                 if (this.vertical) {
-                    h = h * this.count
+                    h = h * (this.count || 1)
                 } else {
-                    w = w * this.count
+                    w = w * (this.count || 1)
                 }
                 return {
-                    width: `${w}px`, height: `${h}px`,
-                    transition, transform
+                    transition,
+                    width: `${w}px`,
+                    height: `${h}px`,
+                    transform: `translate3d(${translateXY.map(n => n && `${n}px`).join(',')}, 0)`
                 }
             },
             coverStyle() {
@@ -68,6 +74,11 @@
                 return {
                     width: `${width}px`, height: `${height}px`
                 }
+            }
+        },
+        watch: {
+            vertical() {
+                this.show(this.curr, false)
             }
         },
         methods: {
@@ -79,14 +90,11 @@
             touchMove(e) {
                 const {pageX: x, pageY: y} = e.changedTouches[0] || {}
                 Object.assign(this.move, {x, y})
-                let distance
-                if (this.vertical) {
-                    distance = this.move.y - this.start.y
-                    this.transform = `translate3d(0, ${distance - this.offset}px, 0`
-                } else {
-                    distance = this.move.x - this.start.x
-                    this.transform = `translate3d(${distance - this.offset}px, 0, 0)`
-                }
+                this.translateXY = this.vertical ?
+                    [0, this.move.y - this.start.y - this.offset]
+                    :
+                    [this.move.x - this.start.x - this.offset, 0]
+
                 e.preventDefault();
             },
             touchEnd(e) {
@@ -109,37 +117,34 @@
                 }
                 this.show(this.curr)
             },
-            show(idx) {
+            show(idx, animate = true) {
                 if (this.vertical) {
                     this.offset = idx * this.height
-                    this.transform = `translate3d(0, -${this.offset}px, 0)`
+                    this.translateXY = [0, -this.offset]
                 } else {
                     this.offset = idx * this.width
-                    this.transform = `translate3d(-${this.offset}px, 0, 0)`
+                    this.translateXY = [-this.offset, 0]
                 }
-                this.transition = `${this.duration}ms`
+                const duration = animate ? this.duration : 0
+                this.transition = duration ? `${this.duration}ms` : 'none'
                 clearTimeout(this.timeout)
                 this.timeout = setTimeout(() => {
                     if (this.curr !== this.prev || this.timeout !== null || this.goto > -1) {
-                        this.activate(this.curr)
                         const cb = this.eventHandlers.swiped || this.noop
                         cb.apply(this, [this.prev, this.curr])
                         this.goto = -1
                         this.timeout = null
                     }
-                }, this.duration)
+                }, duration)
             },
-            activate() {
-                // add class via computed
-            },
-            go(idx) {
+            go(idx, animate = true) {
                 if (idx < 0 || idx > this.count - 1 || idx === this.curr) {
                     return
                 }
                 this.curr = idx
                 this.prev = Math.max(idx - 1, 0)
                 this.goto = idx
-                this.show(idx)
+                this.show(idx, animate)
             },
             next() {
                 if (this.curr >= this.count - 1) {
@@ -163,6 +168,7 @@
         mounted() {
             const $el = this.$refs.container
             const {offsetWidth: width, offsetHeight: height} = $el
+            this.count = this.$children.length
             Object.assign(this, {width, height})
 
         }
@@ -173,6 +179,7 @@
         overflow: hidden;
         width: auto;
         height: 150px;
+        position: relative;
     }
 
     .swiper {
@@ -180,5 +187,6 @@
         display: block;
         overflow: hidden;
         transition: all 0.3s ease;
+        position: relative;
     }
 </style>

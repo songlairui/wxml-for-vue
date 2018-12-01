@@ -15,6 +15,10 @@
                     <div class="swiper-item" :class="item"></div>
                 </swiper-item>
             </swiper>
+            <label for="vertical">指示点</label>
+            <input type="checkbox" id="indicatorDots" v-model="indicatorDots">
+            <label for="vertical">竖向</label>
+            <input type="checkbox" id="vertical" v-model="vertical">
         </div>
     </div>
 </template>
