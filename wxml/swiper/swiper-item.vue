@@ -11,3 +11,24 @@
         }
     }
 </script>
+<style scoped>
+    .swiper-item {
+        height: 100%;
+        background-size: cover;
+        background-position: center center;
+        position: relative;
+        overflow: hidden;
+        float: left;
+    }
+
+    .swiper-item.active .animated {
+        animation-fill-mode: both;
+        opacity: 1;
+    }
+
+    .swiper-item:not(.active) .animated {
+        animation: none;
+        opacity: 0;
+    }
+
+</style>
