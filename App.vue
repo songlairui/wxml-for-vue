@@ -12,7 +12,7 @@
                     :indicatorDots="indicatorDots" :autoplay="autoplay" :circular="circular" :vertical="vertical"
                     :interval="interval" :duration="duration" :previousMargin="previousMargin" :nextMargin="nextMargin">
                 <swiper-item v-for="(item, idx) in background" :key="idx">
-                    {{item}}
+                    <div class="swiper-item" :class="item"></div>
                 </swiper-item>
             </swiper>
         </div>
@@ -46,6 +46,18 @@
                         'width=320, initial-scale=1.0, maximum-scale=1.0, user-scalable=0'
                     document.querySelector('head').appendChild(meta)
                 }
+            },
+            changeIndicatorDots() {
+
+            },
+            changeAutoplay() {
+
+            },
+            intervalChange() {
+
+            },
+            durationChange() {
+
             }
         },
         mounted() {
@@ -53,7 +65,7 @@
         }
     }
 </script>
-<style lang='less'>
+<style lang='less' scoped>
     #app {
         display: flex;
         flex-direction: column;
@@ -74,6 +86,60 @@
         width: 375px;
         box-shadow: 0 0 10px -4px;
         min-height: 400px;
+    }
+
+    .demo-text-1 {
+        position: relative;
+        align-items: center;
+        justify-content: center;
+        background-color: #1AAD19;
+        color: #FFFFFF;
+        font-size: 36px;
+    }
+
+    .demo-text-1:before {
+        content: 'A';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .demo-text-2 {
+        position: relative;
+        align-items: center;
+        justify-content: center;
+        background-color: #2782D7;
+        color: #FFFFFF;
+        font-size: 36px;
+    }
+
+    .demo-text-2:before {
+        content: 'B';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .demo-text-3 {
+        position: relative;
+        align-items: center;
+        justify-content: center;
+        background-color: #F1F1F1;
+        color: #353535;
+        font-size: 36px;
+    }
+
+    .demo-text-3:before {
+        content: 'C';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    .swiper-item{
+        height: 150px;
     }
 </style>
 

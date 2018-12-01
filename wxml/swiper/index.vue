@@ -1,8 +1,10 @@
 <template>
-    <wrapper class="swiper" :style='outerStyle' ref="container" :itemStyle="itemStyle" @touchstart="touchStart"
-             @touchmove="touchMove" @touchend="touchEnd">
-        <slot></slot>
-    </wrapper>
+    <div class="swiper-overflow" :style="coverStyle" ref="container">
+        <wrapper class="swiper" :style='outerStyle' :itemStyle="itemStyle" @touchstart="touchStart"
+                 @touchmove="touchMove" @touchend="touchEnd">
+            <slot></slot>
+        </wrapper>
+    </div>
 </template>
 
 <script>
@@ -58,6 +60,13 @@
                 return {
                     width: `${w}px`, height: `${h}px`,
                     transition, transform
+                }
+            },
+            coverStyle() {
+                let {width, height} = this
+                if (!width || !height) return {}
+                return {
+                    width: `${width}px`, height: `${height}px`
                 }
             }
         },
@@ -160,8 +169,15 @@
     }
 </script>
 <style scoped>
+    .swiper-overflow {
+        overflow: hidden;
+        width: auto;
+        height: 150px;
+    }
+
     .swiper {
         height: 100%;
+        display: block;
         overflow: hidden;
         transition: all 0.3s ease;
     }
