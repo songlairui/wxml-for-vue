@@ -201,9 +201,13 @@
                 this.goto = idx
                 this.show(idx, animate)
             },
-            next() {
+            async next() {
                 this.prev = this.curr
-                this.curr = this.curr >= this.count - 1 ? 0 : this.curr + 1
+                if (this.curr >= this.count - 1) {
+                    this.curr = -1
+                    await this.prepareEnd(1)
+                }
+                this.curr++
                 this.show(this.curr)
             },
             on(eventName, cb) {

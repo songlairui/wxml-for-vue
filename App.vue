@@ -37,7 +37,7 @@
                 vertical: false,
                 autoplay: false,
                 circular: true,
-                interval: 2000,
+                interval: 1000,
                 duration: 500,
                 previousMargin: 0,
                 nextMargin: 0
