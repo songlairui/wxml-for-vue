@@ -19,6 +19,8 @@
             <input type="checkbox" id="indicatorDots" v-model="indicatorDots">
             <label for="vertical">竖向</label>
             <input type="checkbox" id="vertical" v-model="vertical">
+            <label for="autoplay">自动播放</label>
+            <input type="checkbox" id="autoplay" v-model="autoplay">
         </div>
     </div>
 </template>

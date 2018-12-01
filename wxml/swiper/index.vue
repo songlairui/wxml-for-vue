@@ -41,7 +41,12 @@
                 height: 0,
                 transition: 'none',
                 count: 0,
-                translateXY: [0, 0]
+                translateXY: [0, 0],
+                touching: false
+                /* 未响应变量
+                timerAni
+                timerAuto
+                */
             }
         },
         computed: {
@@ -79,10 +84,14 @@
         watch: {
             vertical() {
                 this.show(this.curr, false)
+            },
+            autoplay(val) {
+                val ? this.startAuto() : this.stopAuto()
             }
         },
         methods: {
             touchStart(e) {
+                this.touching = true
                 const {pageX: x, pageY: y} = e.changedTouches[0] || {}
                 Object.assign(this.start, {x, y})
                 this.transition = 'none'
@@ -98,6 +107,7 @@
                 e.preventDefault();
             },
             touchEnd(e) {
+                this.touching = false
                 const {pageX: x, pageY: y} = e.changedTouches[0] || {}
                 Object.assign(this.end, {x, y})
                 let distance
@@ -127,13 +137,14 @@
                 }
                 const duration = animate ? this.duration : 0
                 this.transition = duration ? `${this.duration}ms` : 'none'
-                clearTimeout(this.timeout)
-                this.timeout = setTimeout(() => {
-                    if (this.curr !== this.prev || this.timeout !== null || this.goto > -1) {
+                clearTimeout(this.timerAni)
+                this.timerAni = setTimeout(() => {
+                    if (this.curr !== this.prev || this.timerAni !== null || this.goto > -1) {
                         const cb = this.eventHandlers.swiped || this.noop
                         cb.apply(this, [this.prev, this.curr])
+                        this.autoplay && this.startAuto()
                         this.goto = -1
-                        this.timeout = null
+                        this.timerAni = null
                     }
                 }, duration)
             },
@@ -147,11 +158,9 @@
                 this.show(idx, animate)
             },
             next() {
-                if (this.curr >= this.count - 1) {
-                    return
-                }
                 this.prev = this.curr
-                this.show(++this.curr)
+                this.curr = this.curr >= this.count - 1 ? 0 : this.curr + 1
+                this.show(this.curr)
             },
             on(eventName, cb) {
                 if (this.eventHandlers[eventName]) {
@@ -163,6 +172,19 @@
                 this.eventHandlers[eventName] = Object.freeze(cb)
             },
             noop() {
+            },
+            startAuto() {
+                clearTimeout(this.timerAuto)
+                this.timerAuto = setTimeout(() => {
+                    this.timerAuto = null
+                    if (this.touching) return
+                    this.next()
+                    this.startAuto()
+                }, this.interval)
+            },
+            stopAuto() {
+                clearTimeout(this.timerAuto)
+                this.timerAuto = null
             }
         },
         mounted() {
@@ -170,7 +192,7 @@
             const {offsetWidth: width, offsetHeight: height} = $el
             this.count = this.$children.length
             Object.assign(this, {width, height})
-
+            this.autoplay && this.startAuto()
         }
     }
 </script>
