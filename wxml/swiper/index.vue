@@ -1,7 +1,11 @@
 <template>
     <div class="swiper-overflow" :style="coverStyle" ref="container">
-        <wrapper class="swiper" :style='outerStyle' :itemStyle="itemStyle" @touchstart="touchStart"
-                 @touchmove="touchMove" @touchend="touchEnd">
+        <wrapper class="swiper" :style='outerStyle' :itemStyle="itemStyle"
+                 :circular="circular"
+                 @touchstart="touchStart"
+                 @touchmove="touchMove"
+                 @touchend="touchEnd"
+                 @count="count = $event">
             <slot></slot>
         </wrapper>
         <indicator :count="count"
@@ -18,6 +22,8 @@
     import Wrapper from './wrapper'
     import Indicator from './indicator'
     import props from './props'
+
+    const wait = (num = 0) => new Promise(r => setTimeout(r, num))
 
     export default {
         props,
@@ -50,6 +56,9 @@
             }
         },
         computed: {
+            rCount() {
+                return this.circular ? this.count + 2 : this.count
+            },
             itemStyle() {
                 return (this.width) ? {
                     width: `${this.width}px`, height: `${this.height}px`
@@ -62,9 +71,9 @@
                 let {width: w, height: h, transition, translateXY} = this
                 if (!w || !h) return {}
                 if (this.vertical) {
-                    h = h * (this.count || 1)
+                    h = h * (this.rCount || 1)
                 } else {
-                    w = w * (this.count || 1)
+                    w = w * (this.rCount || 1)
                 }
                 return {
                     transition,
@@ -85,11 +94,27 @@
             vertical() {
                 this.show(this.curr, false)
             },
+            circular() {
+                this.show(this.curr, false)
+            },
             autoplay(val) {
                 val ? this.startAuto() : this.stopAuto()
             }
         },
         methods: {
+            async prepareEnd(last) {
+                this.transition = 'none'
+                const delta = last || 1
+                let [x, y] = this.translateXY
+                if (this.vertical) {
+                    y += this.height * this.count * delta
+                } else {
+                    x += this.width * this.count * delta
+                }
+                this.translateXY = [x, y]
+                await wait()
+                this.transition = `${this.duration}ms`
+            },
             touchStart(e) {
                 this.touching = true
                 const {pageX: x, pageY: y} = e.changedTouches[0] || {}
@@ -106,7 +131,7 @@
 
                 e.preventDefault();
             },
-            touchEnd(e) {
+            async touchEnd(e) {
                 this.touching = false
                 const {pageX: x, pageY: y} = e.changedTouches[0] || {}
                 Object.assign(this.end, {x, y})
@@ -118,16 +143,35 @@
 
                 }
                 this.prev = this.curr
+                if (distance > Math.abs(this.threshold)) {
+                    e.preventDefault()
+                }
                 if (distance > this.threshold) {
-                    this.curr = this.curr === 0 ? 0 : --this.curr
-                    e.preventDefault()
+                    if (this.curr > 0) {
+                        this.curr--
+                    } else if (!this.circular) {
+                        this.curr = 0
+                    } else {
+                        this.curr = this.count - 1
+                        // 挪动
+                        await this.prepareEnd(-1)
+                    }
                 } else if (distance < -this.threshold) {
-                    this.curr = this.curr < (this.count - 1) ? ++this.curr : this.curr
-                    e.preventDefault()
+                    if (this.curr < this.count - 1) {
+                        this.curr++
+
+                    } else if (!this.circular) {
+                        this.curr = this.count - 1
+                    } else {
+                        this.curr = 0
+                        // reset
+                        await this.prepareEnd(1)
+                    }
                 }
                 this.show(this.curr)
             },
             show(idx, animate = true) {
+                if (this.circular) idx = idx + 1
                 if (this.vertical) {
                     this.offset = idx * this.height
                     this.translateXY = [0, -this.offset]
@@ -190,9 +234,9 @@
         mounted() {
             const $el = this.$refs.container
             const {offsetWidth: width, offsetHeight: height} = $el
-            this.count = this.$children.length
             Object.assign(this, {width, height})
             this.autoplay && this.startAuto()
+            this.show(0, false)
         }
     }
 </script>

@@ -21,6 +21,8 @@
             <input type="checkbox" id="vertical" v-model="vertical">
             <label for="autoplay">自动播放</label>
             <input type="checkbox" id="autoplay" v-model="autoplay">
+            <label for="circular">首尾衔接</label>
+            <input type="checkbox" id="circular" v-model="circular">
         </div>
     </div>
 </template>
@@ -34,7 +36,7 @@
                 indicatorDots: true,
                 vertical: false,
                 autoplay: false,
-                circular: false,
+                circular: true,
                 interval: 2000,
                 duration: 500,
                 previousMargin: 0,
