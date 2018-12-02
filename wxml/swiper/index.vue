@@ -2,6 +2,7 @@
     <div class="swiper-overflow" :style="coverStyle" ref="container">
         <wrapper class="swiper" :style='outerStyle' :itemStyle="itemStyle"
                  :circular="circular"
+                 :displayMultipleItems="displayMultipleItems"
                  @touchstart="touchStart"
                  @touchmove="touchMove"
                  @touchend="touchEnd"
@@ -42,8 +43,8 @@
                 curr: this.current,
                 offset: 0,
                 goto: -1,
-                width: 0,
-                height: 0,
+                coverWidth: 0,
+                coverHeight: 0,
                 transition: 'none',
                 count: 0,
                 translateXY: [0, 0],
@@ -56,8 +57,20 @@
             }
         },
         computed: {
+            circularable() {
+                return this.circular && this.count > this.col
+            },
+            width() {
+                return this.coverWidth / (this.vertical ? 1 : this.col)
+            },
+            height() {
+                return this.coverHeight / (this.vertical ? this.col : 1)
+            },
+            col() {
+                return this.displayMultipleItems || 1
+            },
             rCount() {
-                return this.circular ? this.count + 2 : this.count
+                return this.circularable ? this.count + 2 : this.count
             },
             itemStyle() {
                 return (this.width) ? {
@@ -83,10 +96,10 @@
                 }
             },
             coverStyle() {
-                let {width, height} = this
-                if (!width || !height) return {}
+                let {coverWidth, coverHeight} = this
+                if (!coverWidth || !coverHeight) return {}
                 return {
-                    width: `${width}px`, height: `${height}px`
+                    width: `${coverWidth}px`, height: `${coverHeight}px`
                 }
             }
         },
@@ -158,19 +171,19 @@
                 if (distance > this.threshold) {
                     if (this.curr > 0) {
                         this.curr--
-                    } else if (!this.circular) {
+                    } else if (!this.circularable) {
                         this.curr = 0
                     } else {
-                        this.curr = this.count - 1
+                        this.curr = this.count - this.col
                         // 挪动
                         await this.prepareEnd(-1)
                     }
                 } else if (distance < -this.threshold) {
-                    if (this.curr < this.count - 1) {
+                    if (this.curr < this.count - this.col) {
                         this.curr++
 
-                    } else if (!this.circular) {
-                        this.curr = this.count - 1
+                    } else if (!this.circularable) {
+                        this.curr = this.count - this.col
                     } else {
                         this.curr = 0
                         // reset
@@ -180,7 +193,7 @@
                 this.show(this.curr)
             },
             show(idx, animate = true) {
-                if (this.circular) idx = idx + 1
+                if (this.circularable) idx = idx + 1
                 if (this.vertical) {
                     this.offset = idx * this.height
                     this.translateXY = [0, -this.offset]
@@ -201,7 +214,7 @@
                 }, duration)
             },
             go(idx, animate = true) {
-                if (idx < 0 || idx > this.count - 1 || idx === this.curr) {
+                if (idx < 0 || idx > this.count - this.col || idx === this.curr) {
                     return
                 }
                 this.curr = idx
@@ -211,7 +224,7 @@
             },
             async next() {
                 this.prev = this.curr
-                if (this.curr >= this.count - 1) {
+                if (this.curr >= this.count - this.col) {
                     this.curr = -1
                     await this.prepareEnd(1)
                 }
@@ -223,7 +236,7 @@
                 clearTimeout(this.timerAuto)
                 this.timerAuto = setTimeout(() => {
                     this.timerAuto = null
-                    if (this.touching) return
+                    if (this.touching || this.count <= this.col) return
                     this.next()
                     this.startAuto()
                 }, this.interval)
@@ -235,8 +248,8 @@
         },
         mounted() {
             const $el = this.$refs.container
-            const {offsetWidth: width, offsetHeight: height} = $el
-            Object.assign(this, {width, height})
+            const {offsetWidth: coverWidth, offsetHeight: coverHeight} = $el
+            Object.assign(this, {coverWidth, coverHeight})
             this.autoplay && this.startAuto()
             this.show(0, false)
         }

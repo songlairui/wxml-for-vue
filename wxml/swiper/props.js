@@ -41,15 +41,18 @@ export default {
     },
     previousMargin: {
         type: Number,
-        default: 0
+        default: '0px'
     },
     nextMargin: {
         type: Number,
-        default: 0
+        default: '0px'
     },
     displayMultipleItems: {
         type: Number,
-        default: 0
+        default: 1,
+        validator(val) {
+            return val > 0
+        }
     },
     skipHiddenItemLayout: {
         type: Boolean,

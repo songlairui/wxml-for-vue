@@ -11,6 +11,7 @@
             <swiper
                     :indicatorDots="indicatorDots" :autoplay="autoplay" :circular="circular" :vertical="vertical"
                     :interval="interval" :duration="duration" :previousMargin="previousMargin" :nextMargin="nextMargin"
+                    :display-multiple-items="2"
                     @change="debug">
                 <swiper-item v-for="(item, idx) in background" :key="idx" :item-id="idx">
                     <div class="swiper-item" :class="item"></div>
