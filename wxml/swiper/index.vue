@@ -24,7 +24,7 @@
     import Wrapper from './wrapper'
     import Indicator from './indicator'
     import props from './props'
-    import {wait, inChunk} from './utils'
+    import { wait, inChunk } from './utils'
 
     export default {
         props,
@@ -81,7 +81,7 @@
                 return this.vertical ? 'vertical' : 'horizontal'
             },
             outerStyle() {
-                let {width: w, height: h, transition, translateXY} = this
+                let { width: w, height: h, transition, translateXY } = this
                 if (!w || !h) return {}
                 if (this.vertical) {
                     h = h * (this.rCount || 1)
@@ -96,7 +96,7 @@
                 }
             },
             coverStyle() {
-                let {coverWidth, coverHeight} = this
+                let { coverWidth, coverHeight } = this
                 if (!coverWidth || !coverHeight) return {}
                 return {
                     width: `${coverWidth}px`, height: `${coverHeight}px`
@@ -122,21 +122,21 @@
             },
             curr(val) {
                 if (val > -1 && val < this.count) {
-                    this.$emit('change', {detail: {current: val, source: this.source}})
+                    this.$emit('change', { detail: { current: val, source: this.source } })
                 }
             }
         },
         methods: {
             touchStart(e) {
                 this.touching = true
-                const {pageX: x, pageY: y} = e.changedTouches[0] || {}
-                Object.assign(this.start, {x, y})
+                const { pageX: x, pageY: y } = e.changedTouches[0] || {}
+                Object.assign(this.start, { x, y })
                 this.transition = 'none'
             },
             async touchMove(e) {
                 e.preventDefault();
-                const {pageX: x, pageY: y} = e.changedTouches[0] || {}
-                Object.assign(this.move, {x, y})
+                const { pageX: x, pageY: y } = e.changedTouches[0] || {}
+                Object.assign(this.move, { x, y })
                 let [a, b] = [0, 0]
                 // 如果是首尾衔接，则move时补位translate的周期，实现无限循环的感觉
                 if (this.vertical) {
@@ -151,8 +151,8 @@
             async touchEnd(e) {
                 this.source = 'touch'
                 this.touching = false
-                const {pageX: x, pageY: y} = e.changedTouches[0] || {}
-                Object.assign(this.end, {x, y})
+                const { pageX: x, pageY: y } = e.changedTouches[0] || {}
+                Object.assign(this.end, { x, y })
                 let distance
                 if (this.vertical) {
                     distance = this.end.y - this.start.y
@@ -192,7 +192,7 @@
                 clearTimeout(this.timerAni)
                 this.timerAni = setTimeout(() => {
                     if (this.curr !== this.prev || this.timerAni !== null || this.goto > -1) {
-                        this.$emit('animationfinish', {detail: {current: this.curr, source: this.source}})
+                        this.$emit('animationfinish', { detail: { current: this.curr, source: this.source } })
                         this.autoplay && this.startAuto()
                         this.goto = -1
                         this.timerAni = null
@@ -233,8 +233,9 @@
             },
             init() {
                 const $el = this.$refs.container
-                const {offsetWidth: coverWidth, offsetHeight: coverHeight} = $el
-                Object.assign(this, {coverWidth, coverHeight})
+                if (!$el) return
+                const { offsetWidth: coverWidth, offsetHeight: coverHeight } = $el
+                Object.assign(this, { coverWidth, coverHeight })
                 this.autoplay && this.startAuto()
                 this.show(this.curr, false)
             }

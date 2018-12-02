@@ -5,7 +5,7 @@
     </div>
 </template>
 <script>
-    import {isInChunk} from './utils'
+    import { isInChunk } from './utils'
 
     export default {
         name: 'indicator',
