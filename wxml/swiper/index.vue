@@ -25,6 +25,17 @@
     import props from './props'
 
     const wait = (num = 0) => new Promise(r => setTimeout(r, num))
+    /** inChunk(0, 5)(9) --> 2
+        inChunk(0, 5)(-1) --> 4*/
+    const inChunk = (min, max) => val => {
+        while(val < min && val < max) {
+            val += Math.abs(max - min)
+        }
+        while(val > min && val > max) {
+            val -= Math.abs(max - min)
+        }
+        return val
+    }
 
     export default {
         props,
@@ -142,15 +153,20 @@
                 Object.assign(this.start, {x, y})
                 this.transition = 'none'
             },
-            touchMove(e) {
+            async touchMove(e) {
+                e.preventDefault();
                 const {pageX: x, pageY: y} = e.changedTouches[0] || {}
                 Object.assign(this.move, {x, y})
-                this.translateXY = this.vertical ?
-                    [0, this.move.y - this.start.y - this.offset]
-                    :
-                    [this.move.x - this.start.x - this.offset, 0]
-
-                e.preventDefault();
+                let [a, b] = [0, 0]
+                // 如果是首尾衔接，则move时补位translate的周期，实现无限循环的感觉
+                if (this.vertical) {
+                    const target = this.move.y - this.start.y - this.offset
+                    b = this.circularable ? inChunk(-this.height * this.count, 0)(target) : target
+                } else {
+                    const target = this.move.x - this.start.x - this.offset
+                    a = this.circularable ? inChunk(-this.width * this.count, 0)(target) : target
+                }
+                this.translateXY = [a, b]
             },
             async touchEnd(e) {
                 this.source = 'touch'
@@ -165,34 +181,23 @@
 
                 }
                 this.prev = this.curr
-                if (distance > Math.abs(this.threshold)) {
-                    e.preventDefault()
-                }
                 if (distance > this.threshold) {
-                    if (this.curr > 0) {
-                        this.curr--
-                    } else if (!this.circularable) {
-                        this.curr = 0
-                    } else {
-                        this.curr = this.count - this.col
-                        // 挪动
-                        await this.prepareEnd(-1)
-                    }
+                    const minCur = 1 - this.col
+                    this.curr = this.curr === minCur ? minCur : --this.curr
+                    e.preventDefault()
                 } else if (distance < -this.threshold) {
-                    if (this.curr < this.count - this.col) {
-                        this.curr++
-
-                    } else if (!this.circularable) {
-                        this.curr = this.count - this.col
-                    } else {
-                        this.curr = 0
-                        // reset
-                        await this.prepareEnd(1)
-                    }
+                    this.curr = this.curr < (this.count - 1) ? ++this.curr : this.circular ? 0 : this.curr
+                    e.preventDefault()
+                } else if (distance < 0 && this.curr === this.count - 1) {
+                    // 用于处理 current为count-1时，向current = 0拖动并未达到threshold到界面表现
+                    this.curr = -1
                 }
                 this.show(this.curr)
             },
             show(idx, animate = true) {
+                if (this.curr < 0) {
+                    this.curr += this.count
+                }
                 if (this.circularable) idx = idx + 1
                 if (this.vertical) {
                     this.offset = idx * this.height
@@ -214,7 +219,7 @@
                 }, duration)
             },
             go(idx, animate = true) {
-                if (idx < 0 || idx > this.count - this.col || idx === this.curr) {
+                if (idx < 0 || idx > this.count - 1 || idx === this.curr) {
                     return
                 }
                 this.curr = idx
@@ -224,7 +229,7 @@
             },
             async next() {
                 this.prev = this.curr
-                if (this.curr >= this.count - this.col) {
+                if (this.curr >= this.count - 1) {
                     this.curr = -1
                     await this.prepareEnd(1)
                 }
