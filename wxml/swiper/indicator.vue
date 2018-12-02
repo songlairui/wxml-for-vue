@@ -5,6 +5,8 @@
     </div>
 </template>
 <script>
+    import {isInChunk} from './utils'
+
     export default {
         name: 'indicator',
         props: {
@@ -24,14 +26,14 @@
                 type: String,
                 default: '#000000'
             },
-            vertical: Boolean
-
+            vertical: Boolean,
+            displayMultipleItems: Number
         },
         computed: {
             dotsBg() {
                 let arr = []
                 arr.length = this.count
-                return arr.fill(0).map((__, idx) => idx === this.curr ? this.indicatorActiveColor : this.indicatorColor)
+                return arr.fill(0).map((__, idx) => isInChunk(this.curr, this.displayMultipleItems, this.count)(idx) ? this.indicatorActiveColor : this.indicatorColor)
             },
             outerStyle() {
                 return this.vertical ? {

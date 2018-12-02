@@ -13,6 +13,7 @@
                    :curr="curr"
                    :indicatorColor="indicatorColor"
                    :indicatorActiveColor="indicatorActiveColor"
+                   :displayMultipleItems="displayMultipleItems"
                    :vertical="vertical"
                    v-if="indicatorDots && count">
         </indicator>
@@ -23,19 +24,7 @@
     import Wrapper from './wrapper'
     import Indicator from './indicator'
     import props from './props'
-
-    const wait = (num = 0) => new Promise(r => setTimeout(r, num))
-    /** inChunk(0, 5)(9) --> 2
-        inChunk(0, 5)(-1) --> 4*/
-    const inChunk = (min, max) => val => {
-        while(val < min && val < max) {
-            val += Math.abs(max - min)
-        }
-        while(val > min && val > max) {
-            val -= Math.abs(max - min)
-        }
-        return val
-    }
+    import {wait, inChunk} from './utils'
 
     export default {
         props,
@@ -121,7 +110,11 @@
             vertical() {
                 this.show(this.curr, false)
             },
-            circular() {
+            circular(val) {
+                const maxCur = this.count - this.col
+                if (!val && this.curr > maxCur) {
+                    this.curr = maxCur
+                }
                 this.show(this.curr, false)
             },
             autoplay(val) {
@@ -134,19 +127,6 @@
             }
         },
         methods: {
-            async prepareEnd(last) {
-                this.transition = 'none'
-                const delta = last || 1
-                let [x, y] = this.translateXY
-                if (this.vertical) {
-                    y += this.height * this.count * delta
-                } else {
-                    x += this.width * this.count * delta
-                }
-                this.translateXY = [x, y]
-                await wait()
-                this.transition = `${this.duration}ms`
-            },
             touchStart(e) {
                 this.touching = true
                 const {pageX: x, pageY: y} = e.changedTouches[0] || {}
@@ -182,13 +162,14 @@
                 }
                 this.prev = this.curr
                 if (distance > this.threshold) {
-                    const minCur = 1 - this.col
+                    const minCur = this.circular ? 1 - this.col : 0
                     this.curr = this.curr === minCur ? minCur : --this.curr
                     e.preventDefault()
                 } else if (distance < -this.threshold) {
-                    this.curr = this.curr < (this.count - 1) ? ++this.curr : this.circular ? 0 : this.curr
+                    const maxCur = this.circular ? (this.count - 1) : (this.count - this.col)
+                    this.curr = this.curr < maxCur ? ++this.curr : this.circular ? 0 : this.curr
                     e.preventDefault()
-                } else if (distance < 0 && this.curr === this.count - 1) {
+                } else if (this.circular && distance < 0 && this.curr === this.count - 1) {
                     // 用于处理 current为count-1时，向current = 0拖动并未达到threshold到界面表现
                     this.curr = -1
                 }
@@ -229,9 +210,9 @@
             },
             async next() {
                 this.prev = this.curr
-                if (this.curr >= this.count - 1) {
-                    this.curr = -1
-                    await this.prepareEnd(1)
+                if (this.curr === this.count - 1) {
+                    this.show(-1, false)
+                    await wait()
                 }
                 this.curr++
                 this.show(this.curr)
@@ -249,14 +230,17 @@
             stopAuto() {
                 clearTimeout(this.timerAuto)
                 this.timerAuto = null
+            },
+            init() {
+                const $el = this.$refs.container
+                const {offsetWidth: coverWidth, offsetHeight: coverHeight} = $el
+                Object.assign(this, {coverWidth, coverHeight})
+                this.autoplay && this.startAuto()
+                this.show(this.curr, false)
             }
         },
         mounted() {
-            const $el = this.$refs.container
-            const {offsetWidth: coverWidth, offsetHeight: coverHeight} = $el
-            Object.assign(this, {coverWidth, coverHeight})
-            this.autoplay && this.startAuto()
-            this.show(0, false)
+            this.init()
         }
     }
 </script>
