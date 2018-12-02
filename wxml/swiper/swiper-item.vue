@@ -7,7 +7,8 @@
     export default {
         name: 'swiper-item',
         props: {
-            itemStyle: Object
+            itemStyle: Object,
+            itemId: [Number, String]
         }
     }
 </script>

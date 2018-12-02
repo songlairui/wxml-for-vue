@@ -9,11 +9,10 @@ export default {
     render: function (createElement, context) {
         const {props, data, listeners} = context
         const slots = context.slots()
-        const children = (slots.default || []).map(({componentOptions, key}) => [componentOptions.children, key])
+        const children = (slots.default || []).map(({componentOptions = {}}) => [componentOptions.children, componentOptions.propsData])
         const count = children.length
         listeners.count && listeners.count(count)
 
-        console.info('children', [...children], slots.default)
         if (data.attrs.circular) {
             const first = [...children[0]]
             const last = [...children[children.length - 1]]
@@ -22,6 +21,8 @@ export default {
             children.push(first)
             children.unshift(last)
         }
-        return createElement('div', context.data, children.map(([opt, key]) => createElement(Item, {props, key}, opt)))
+        return createElement('div', context.data, children.map(([opt, propsData]) => createElement(Item, {
+            props: {...propsData, ...props}
+        }, opt)))
     }
 }

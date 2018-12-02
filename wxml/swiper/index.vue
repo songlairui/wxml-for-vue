@@ -39,7 +39,7 @@
                 move: {},
                 end: {},
                 prev: 0,
-                curr: 0,
+                curr: this.current,
                 offset: 0,
                 goto: -1,
                 width: 0,
@@ -91,6 +91,9 @@
             }
         },
         watch: {
+            current(val) {
+                this.curr = val
+            },
             vertical() {
                 this.show(this.curr, false)
             },
